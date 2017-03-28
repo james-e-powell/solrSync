@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:rs="http://www.openarchives.org/rs/terms/">
+  <rs:md capability="changelist"
+          at="{{datestamp}}"/>
+
+  {% for item in list%}
+ 
+  <url>
+  <loc> {{item.fulltext}}</loc>
+    <lastmod>{{item.fulltext.timestamp}}</lastmod>
+    <rs:ln rel="describedby"
+           href="{{item.fulltext.metadata}} />
+    <rs:ln rel="related"
+           href="{{item.doi}}" />
+  </url>
+
+  <url>
+  <loc>{{item.fulltext.metadata}}</loc>
+    <lastmod>{{item.fulltext.timestamp}}</lastmod>
+    <rs:ln rel="describes"
+           href="{{item.fulltext}}"
+     />
+    <rs:ln rel="profile"
+           href="http://www.w3.org/2001/XMLSchema-instance"/>
+  </url>
+
+  {% endfor %}
+
+</urlset>
