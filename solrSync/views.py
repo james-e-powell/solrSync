@@ -11,7 +11,7 @@ import django.conf as conf
 import datetime
 import time
 from django.views.decorators.http import condition
-from resync import Resource,ResourceList
+from resync import Resource,ResourceList,ChangeList
 
 # Constants
 metadataUriBase = 'http://lastage.lanl.gov:8080/adore-disseminator/service?url_ver=Z39.88-2004&rft_id=_URI_&svc_id=info:lanl-repo/svc/xml.format.full'
@@ -219,7 +219,7 @@ def changelist(response):
   response = HttpResponse()
   response.writable()
 
-  rl = ResourceList()
+  cl = ChangeList()
   # solrResults = models.Results.results.get_queryset()
 
   queryField = 'title'
