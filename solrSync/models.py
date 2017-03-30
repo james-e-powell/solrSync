@@ -11,6 +11,12 @@ import django.conf as conf
 import datetime
 import time
 
+class ResourceSync(models.Model):
+  # lower_bound is a value for changelists
+  lower_bound = models.DateTimeField(blank=True, null=True)
+  list_type = models.CharField(max_length=255)
+  interval = models.DurationField(default = datetime.timedelta(days=5), blank=True, null=True)
+
 class ResultsQuerySet(models.QuerySet):
   def results(self):
     return self.resultSet
@@ -171,8 +177,3 @@ class Results(models.Model):
     app_label='Results'
     results = ResultsManager()
 
-class ResourceSync(models.Model):
-  # lower_bound is a value for changelists
-  lower_bound = models.DateTimeField(blank=True, null=True)
-  list_type = models.CharField(max_length=255)
-  interval = models.DurationField(default = datetime.timedelta(days=5), blank=True, null=True)

@@ -92,20 +92,23 @@ def resourcelist(response):
   rl.up = "http://example.com/dataset1/capabilitylist.xml"
   rl.md_until = resourcelist_timestamp
 
-  # try:    
-  #   solr_timestamp = '{:%Y-%m-%dT%H:%M:%SZ}'.format(aResourceSyncEntry.lower_bound)
-  # except:
-  #   solr_timestamp = '{:%Y-%m-%dT%H:%M:%SZ}'.format(thisMoment)
-  solr_timestamp = ''
   try:
     resourceList = models.ResourceSync.objects.get(list_type='resourcelist')
     resourcelist_refresh = resourceList.interval
-    resourcelist_timestamp = resourceList.list_date
+    resourcelist_timestamp = resourceList.lower_bound
     print resourcelist_timestamp
-    solr_timestamp = '[ to :%Y-%m-%dT%H:%M:%SZ]'.format(resourcelist_timestamp)
+    solr_timestamp = '{:%Y-%m-%dT%H:%M:%SZ}'.format(resourcelist_timestamp)
   except:
     thisMoment = timezone.now()
-  # solr_timestamp = settings.RESOURCESYNC_RESOURCELIST_TIMESTAMP
+    resourcelist_timestamp = thisMoment
+    # aResourceSyncEntry = ResourceSync(lower_bound = thisMoment, list_type='resourcelist', interval=datetime.timedelta(days=30))
+    aResourceSyncEntry = models.ResourceSync(lower_bound = None, list_type='resourcelist', interval=None)
+    aResourceSyncEntry.save()
+    try:    
+      solr_timestamp = '[:%Y-%m-%dT%H:%M:%SZ]'.format(aResourceSyncEntry.lower_bound)
+    except:
+      solr_timestamp = '[:%Y-%m-%dT%H:%M:%SZ]'.format(thisMoment)
+    resourcelist_refresh = aResourceSyncEntry.interval
   print solr_timestamp
 
   count=0
@@ -227,23 +230,34 @@ def changelist(response):
   solr_timestamp = ''
   thisMoment = timezone.now()
 
+  resourcelist_timestamp = ''
+  changelist_timestamp = ''
+
   try:
     resourceList = models.ResourceSync.objects.get(list_type='resourcelist')
     resourcelist_refresh = resourceList.interval
     resourcelist_timestamp = resourceList.list_date
     changeList = models.ResourceSync.objects.get(list_type='changelist')
     changelist_timestamp = changeList.list_date
-
-    rl.md_from = resourcelist_timestamp
-    rl.md_until = changelist_timestamp
-    print resourcelist_timestamp
-    print changelist_timestamp
-
-    from_timestamp = '%Y-%m-%dT%H:%M:%SZ'.format(resourcelist_timestamp)
-    until_timestamp = '%Y-%m-%dT%H:%M:%SZ'.format(changelist_timestamp)
   except:
-    thisMoment = timezone.now()
-    solr_timestamp = '{' + from_timestamp + ' to ' + until_timestamp + '}'
+
+    try:
+      aChangeListEntry = models.ResourceSync.objects.get(list_type='changelist')
+      aChangeListEntry.set(lower_bound=thisMoment)
+      aChangeListEntry.save()
+    except:
+      aChangeListEntry = models.ResourceSync(lower_bound = thisMoment, list_type='changelist')
+      aChangeListEntry.save()
+      changelist_timestamp = thisMoment
+
+  rl.md_from = resourcelist_timestamp
+  rl.md_until = changelist_timestamp
+  print resourcelist_timestamp
+  print changelist_timestamp
+
+  from_timestamp = '%Y-%m-%dT%H:%M:%SZ'.format(resourcelist_timestamp)
+  until_timestamp = '%Y-%m-%dT%H:%M:%SZ'.format(changelist_timestamp)
+  solr_timestamp = '{' + from_timestamp + ' to ' + until_timestamp + '}'
 
   solrResults = models.Results.results.get_queryset(25)
  
