@@ -93,7 +93,7 @@ def resourcelist(response):
   # timestamp = settings.RESOURCESYNC_RESOURCELIST_TIMESTAMP
   solr_timestamp = ''
   
-  rl.up = "http://example.com/dataset1/capabilitylist.xml"
+  rl.up = "capabilitylist.xml"
 
   resourceList = dbLookup('resourcelist')
   resourcelist_refresh = resourceList.interval
@@ -241,15 +241,25 @@ def changelist(response):
   solr_timestamp = '{' + from_timestamp + ' to ' + until_timestamp + '}'
   print 'changelist time query ' + solr_timestamp
 
-  solrResults = models.Results.results.get_queryset(25)
+  solrResults = models.Results.results.get_queryset(1000)
  
   for solrResult in solrResults:
-
-     thisResource = Resource(uri=solrResult['recID'], lastmod = solrResult['timestamp'], mime_type="application/xml", change='created' )
-     thisResource.link_set(rel="profile", href="http://www.w3.org/2001/XMLSchema-instance")
+     # a solrResult is a resultObj
+     # a resultObj has following fields: recID, timestamp, doi, contentUri
+     # if there is a contentUri, then describes, describedby
      try:
+       thisResource = Resource(uri=solrResult['contentUri'], lastmod = solrResult['timestamp'], change='created')
+       thisResource.link_set(rel="describedby", modified = timestamp, href = recMetadataUri)
+       thisResourceRecip = Resource(uri =solrResult['recID'], lastmod=solrResult['timestamp'], change='created')
+       thisResourceRecip.link_set(rel="describes", href=solrResult['contentUri'], modified=solrResult['timestamp'])
+       thisResourceRecip.link_set(rel="profile", href="http://www.w3.org/2001/XMLSchema-instance")
        cl.add(thisResource)
-     except Exception as e: print str(e)
+       cl.add(thisResourceRecip)
+
+     except:
+        thisResource = Resource(uri=solrResult['recID'], lastmod = solrResult['timestamp'], mime_type="application/xml", change='created', timestamp=solrResult['timestamp'])
+        thisResource.link_set(rel="profile", href="http://www.w3.org/2001/XMLSchema-instance")
+        cl.add(thisResource)
 
   response.writelines(cl.as_xml())
   response.flush()

@@ -40,6 +40,10 @@ class ResultsManager(models.Manager):
 
     # def results(self, resourceSyncType, timestamp):
     def get_queryset(self, numResults):
+      # returns a list of resultObj
+      # resultObj has following fields: recID, timestamp, doi, contentUri
+      # resultObj is build from Solr results set doc entries
+
       resultSet = []
       # Constants
       metadataUriBase = 'http://lastage.lanl.gov:8080/adore-disseminator/service?url_ver=Z39.88-2004&rft_id=_URI_&svc_id=info:lanl-repo/svc/xml.format.full'
