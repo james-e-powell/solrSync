@@ -73,7 +73,14 @@ def resourceSync(response):
   
   return response
 
-
+def dbLookup(list_type):
+  try:
+    resourceSync = models.ResourceSync.objects.get(list_type=list_type)
+  except:
+    thisMoment = timezone.now()
+    resourceSync = models.ResourceSync(lower_bound = thisMoment, list_type=list_type, interval=None)
+    resourceSync.save()
+  return resourceSync
 
 def resourcelist(response):
   response = HttpResponse()
@@ -85,29 +92,17 @@ def resourcelist(response):
   queryString = settings.RESOURCESYNC_QUERY
   # timestamp = settings.RESOURCESYNC_RESOURCELIST_TIMESTAMP
   solr_timestamp = ''
-  thisMoment = timezone.now()
   
-  # resourcelist_timestamp = thisMoment
+  rl.up = "http://example.com/dataset1/capabilitylist.xml"
 
-  # rl.up = "http://example.com/dataset1/capabilitylist.xml"
-  # rl.md_until = resourcelist_timestamp
+  resourceList = dbLookup('resourcelist')
+  resourcelist_refresh = resourceList.interval
+  resourcelist_timestamp = resourceList.lower_bound
+  print 'resourcelist timestamp: ' + resourcelist_timestamp.strftime('%Y-%m-%dT%H:%M:%SZ')
+  solr_timestamp = resourcelist_timestamp.strftime('%Y-%m-%dT%H:%M:%SZ')
 
-  try:
-    resourceList = models.ResourceSync.objects.get(list_type='resourcelist')
-    # resourceList = models.ResourceSync.all(list_type='resourcelist')
-    resourcelist_refresh = resourceList.interval
-    resourcelist_timestamp = resourceList.lower_bound
-    print 'resourcelist timestamp: ' + resourcelist_timestamp.strftime('%Y-%m-%dT%H:%M:%SZ')
-    solr_timestamp = resourcelist_timestamp.strftime('%Y-%m-%dT%H:%M:%SZ')
-  # except Exception as e: print str(e)
-  except:
-    thisMoment = timezone.now()
-    print thisMoment
-    resourcelist_timestamp = thisMoment
-    aResourceSyncEntry = models.ResourceSync(lower_bound = thisMoment, list_type='resourcelist', interval=None)
-    aResourceSyncEntry.save()
-    solr_timestamp = thisMoment.strftime('[%Y-%m-%dT%H:%M:%SZ]')
   print 'solr timestamp: ' + solr_timestamp
+  rl.md_until = resourcelist_timestamp
 
   count=0
   recFound = False
@@ -227,49 +222,36 @@ def changelist(response):
 
   queryField = 'title'
   queryString = settings.RESOURCESYNC_QUERY
-  solr_timestamp = ''
-  thisMoment = timezone.now()
 
+  solr_timestamp = ''
   resourcelist_timestamp = ''
   changelist_timestamp = ''
 
-  try:
-    resourceList = models.ResourceSync.objects.get(list_type='resourcelist')
-    resourcelist_refresh = resourceList.interval
-    resourcelist_timestamp = resourceList.lower_bound
-    changeList = models.ResourceSync.objects.get(list_type='changelist')
-    changelist_timestamp = changeList.lower_bound
-  except:
+  resourceList = dbLookup('resourcelist')
+  resourcelist_refresh = resourceList.interval
+  resourcelist_timestamp = resourceList.lower_bound
+  changeList = dbLookup('changelist')
+  changelist_timestamp = changeList.lower_bound
 
-    try:
-      aChangeListEntry = models.ResourceSync.objects.get(list_type='changelist')
-      aChangeListEntry.set(lower_bound=thisMoment)
-      aChangeListEntry.save()
-    except:
-      aChangeListEntry = models.ResourceSync(lower_bound = thisMoment, list_type='changelist')
-      aChangeListEntry.save()
-      changelist_timestamp = thisMoment
+  cl.md_from = resourcelist_timestamp
+  cl.md_until = changelist_timestamp
 
-  rl.md_from = resourcelist_timestamp
-  rl.md_until = changelist_timestamp
-  print resourcelist_timestamp
-  print changelist_timestamp
-
-  from_timestamp = '%Y-%m-%dT%H:%M:%SZ'.format(resourcelist_timestamp)
-  until_timestamp = '%Y-%m-%dT%H:%M:%SZ'.format(changelist_timestamp)
+  from_timestamp = resourcelist_timestamp.strftime('%Y-%m-%dT%H:%M:%SZ')
+  until_timestamp = changelist_timestamp.strftime('%Y-%m-%dT%H:%M:%SZ')
   solr_timestamp = '{' + from_timestamp + ' to ' + until_timestamp + '}'
+  print 'changelist time query ' + solr_timestamp
 
   solrResults = models.Results.results.get_queryset(25)
  
   for solrResult in solrResults:
 
-     thisResource = Resource(uri=solrResult['recID'], lastmod = solrResult['timestamp'], mime_type="application/xml", )
+     thisResource = Resource(uri=solrResult['recID'], lastmod = solrResult['timestamp'], mime_type="application/xml", change='created' )
      thisResource.link_set(rel="profile", href="http://www.w3.org/2001/XMLSchema-instance")
      try:
-       rl.add(thisResource)
+       cl.add(thisResource)
      except Exception as e: print str(e)
 
-  response.writelines(rl.as_xml())
+  response.writelines(cl.as_xml())
   response.flush()
   return HttpResponse(response, content_type="text/xml; charset=utf-8")
 
