@@ -22,6 +22,18 @@ class ResultsQuerySet(models.QuerySet):
     return self.resultSet
 
 class ResultsManager(models.Manager):
+    # This class extracts information from a Solr results set
+    # It is specifically looking for timestamp, metadata URI, full text
+    #   At LANL there's a common repository (aDORe), so recID is used 
+    #     to construct a URI that points at metadata, this is found in a str 
+    #     element with a name attribute assigned the value "recID"
+    #   Full text is found in a arr element with a name element with value "url"
+    #     sometimes there are multiple full text uris separated by "| character
+    #   timestamp is in the date element
+    #   DOI is found in a str element, name attribute assigned the value "doi"
+    # The list contains an entry per Solr doc element in results 
+    # The result list entries format is described below 
+
     app_label='ResultsManager'
 
     # def get_queryset(self):
@@ -38,7 +50,6 @@ class ResultsManager(models.Manager):
       resp = requests.get(resourceUri)
       return resp.text
 
-    # def results(self, resourceSyncType, timestamp):
     def get_queryset(self, numResults):
       # returns a list of resultObj
       # resultObj has following fields: recID, timestamp, doi, contentUri
@@ -59,8 +70,6 @@ class ResultsManager(models.Manager):
       solr_timestamp = ''
       thisMoment = timezone.now()
   
-      resourcelist_timestamp = thisMoment
-
       solr_timestamp = settings.RESOURCESYNC_RESOURCELIST_TIMESTAMP
       print solr_timestamp
 
@@ -137,7 +146,6 @@ class ResultsManager(models.Manager):
               recMetadataUri =  metadataUriBase.replace('_URI_', recId)
               print recMetadataUri
               print str(count)
-              resourceWritten = False
 
               for arrStringNode in arrStringNodes:
                 name = arrStringNode['@name']
@@ -154,27 +162,12 @@ class ResultsManager(models.Manager):
                     print 'linkval = ' +linkVal
                     resultObj['contentUri']= linkVal
      
-                    try:
-                      thisResource = Resource(uri=linkVal, lastmod = timestamp)
-                      thisResource.link_set(rel="describedby", modified = timestamp, href = recMetadataUri)
-                      print ' got this far '
-                      thisResourceRecip = Resource(uri = recMetadataUri, lastmod = timestamp)
-                      thisResourceRecip.link_set(rel="describes", href=linkVal, modified=timestamp)
-                      thisResourceRecip.link_set(rel="profile", href="http://www.w3.org/2001/XMLSchema-instance")
-                      resourceWritten = True
-                      print 'resource added for ' + linkVal
-                    except Exception as e: print str(e)
-
               resultSet.append(resultObj)
-              if not resourceWritten: 
-                thisResource = Resource(uri=recMetadataUri, lastmod = timestamp, mime_type="application/xml", )
-                thisResource.link_set(rel="profile", href="http://www.w3.org/2001/XMLSchema-instance")
             if count>=numResults:
               allFound = True
           except:
             pass
 
-      print resultSet
       return resultSet
 
 class Results(models.Model):
