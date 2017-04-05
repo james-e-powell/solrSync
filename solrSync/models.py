@@ -50,7 +50,8 @@ class ResultsManager(models.Manager):
       resp = requests.get(resourceUri)
       return resp.text
 
-    def get_queryset(self, numResults):
+    # def get_queryset(self, numResults):
+    def get_queryset(self):
       # returns a list of resultObj
       # resultObj has following fields: recID, timestamp, doi, contentUri
       # resultObj is build from Solr results set doc entries
@@ -66,9 +67,6 @@ class ResultsManager(models.Manager):
 
       queryField = 'title'
       queryString = settings.RESOURCESYNC_QUERY
-      # timestamp = settings.RESOURCESYNC_RESOURCELIST_TIMESTAMP
-      solr_timestamp = ''
-      thisMoment = timezone.now()
   
       solr_timestamp = settings.RESOURCESYNC_RESOURCELIST_TIMESTAMP
       print solr_timestamp
@@ -82,8 +80,6 @@ class ResultsManager(models.Manager):
       while not(allFound):
         count += 1
         lastCursor = pagingCursor
-        if count>=numResults:
-          allFound = True
 
         searchUri = settings.RESOURCESYNC_SOLR
         try:
@@ -103,8 +99,6 @@ class ResultsManager(models.Manager):
 
         resp = requests.get(searchUri)
         r = resp.text
-
-        # r = getUri(searchUri)
 
         xmldict = xmltodict.parse(r)
         try:
@@ -161,10 +155,11 @@ class ResultsManager(models.Manager):
                     linkVal = linkTextParts[1]
                     print 'linkval = ' +linkVal
                     resultObj['contentUri']= linkVal
-     
-              resultSet.append(resultObj)
-            if count>=numResults:
-              allFound = True
+              try:
+                # test = resultObj['contentUri'] 
+                resultSet.append(resultObj)
+              except:
+                pass
           except:
             pass
 

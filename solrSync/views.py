@@ -204,8 +204,8 @@ def resourcelist(response):
                   rl.add(thisResource)
                 except Exception as e: print str(e)
 
-        if count>=200:
-          allFound = True
+        # if count>=15000:
+        #   allFound = True
       except:
         pass
 
@@ -241,25 +241,30 @@ def changelist(response):
   solr_timestamp = '{' + from_timestamp + ' to ' + until_timestamp + '}'
   print 'changelist time query ' + solr_timestamp
 
-  solrResults = models.Results.results.get_queryset(1000)
+  solrResults = models.Results.results.get_queryset()
  
   for solrResult in solrResults:
      # a solrResult is a resultObj
      # a resultObj has following fields: recID, timestamp, doi, contentUri
      # if there is a contentUri, then describes, describedby
+     recMetadatari = ''
+     recMetadataUri =  metadataUriBase.replace('_URI_', solrResult['recID'])
+
      try:
        thisResource = Resource(uri=solrResult['contentUri'], lastmod = solrResult['timestamp'], change='created')
-       thisResource.link_set(rel="describedby", modified = timestamp, href = recMetadataUri)
-       thisResourceRecip = Resource(uri =solrResult['recID'], lastmod=solrResult['timestamp'], change='created')
+       thisResource.link_set(rel="describedby", modified = solrResult['timestamp'], href = recMetadataUri)
+       thisResourceRecip = Resource(uri =recMetadataUri, lastmod=solrResult['timestamp'], change='created')
        thisResourceRecip.link_set(rel="describes", href=solrResult['contentUri'], modified=solrResult['timestamp'])
        thisResourceRecip.link_set(rel="profile", href="http://www.w3.org/2001/XMLSchema-instance")
        cl.add(thisResource)
        cl.add(thisResourceRecip)
 
-     except:
-        thisResource = Resource(uri=solrResult['recID'], lastmod = solrResult['timestamp'], mime_type="application/xml", change='created', timestamp=solrResult['timestamp'])
-        thisResource.link_set(rel="profile", href="http://www.w3.org/2001/XMLSchema-instance")
-        cl.add(thisResource)
+     except Exception as e: print str(e)
+
+     # except:
+     #    thisResource = Resource(uri=recMetadataUri, lastmod = solrResult['timestamp'], mime_type="application/xml", change='created', timestamp=solrResult['timestamp'])
+     #    thisResource.link_set(rel="profile", href="http://www.w3.org/2001/XMLSchema-instance")
+     #    cl.add(thisResource)
 
   response.writelines(cl.as_xml())
   response.flush()
