@@ -82,137 +82,6 @@ def dbLookup(list_type):
     resourceSync.save()
   return resourceSync
 
-def resourcelist(response):
-  response = HttpResponse()
-  response.writable()
-
-  rl = ResourceList()
-
-  queryField = 'title'
-  queryString = settings.RESOURCESYNC_QUERY
-  # timestamp = settings.RESOURCESYNC_RESOURCELIST_TIMESTAMP
-  solr_timestamp = ''
-  
-  rl.up = "capabilitylist.xml"
-
-  resourceList = dbLookup('resourcelist')
-  resourcelist_refresh = resourceList.interval
-  resourcelist_timestamp = resourceList.lower_bound
-  print 'resourcelist timestamp: ' + resourcelist_timestamp.strftime('%Y-%m-%dT%H:%M:%SZ')
-  solr_timestamp = resourcelist_timestamp.strftime('%Y-%m-%dT%H:%M:%SZ')
-
-  print 'solr timestamp: ' + solr_timestamp
-  rl.md_until = resourcelist_timestamp
-
-  count=0
-  recFound = False
-  urlFound = False
-  allFound = False
-  pagingCursor = ''
-  print allFound
-
-  while not(allFound):
-    lastCursor = pagingCursor
-
-    searchUri = settings.RESOURCESYNC_SOLR
-    try:
-      searchUri = searchUri.replace('_FIELD_', queryField)
-    except:
-      pass
-    try:
-      searchUri = searchUri.replace('_QUERY_', queryString)
-    except:
-      pass
-    searchUri = searchUri.replace('_TIMESTAMP_', solr_timestamp)
-    print searchUri
-
-    if not (pagingCursor == ''):
-      searchUri = searchUri.replace('_*_',pagingCursor)
-    else:
-      searchUri = searchUri.replace('_*_','*')
-
-    r = getUri(searchUri)
-
-    xmldict = xmltodict.parse(r)
-
-    try:
-      pagingCursorMark = xmldict['response']['str']['@name']
-
-      if pagingCursorMark == 'nextCursorMark':
-        pagingCursor =  xmldict['response']['str']['#text']
-    except:
-      pagingCursor = lastCursor
-
-    if pagingCursor == lastCursor:
-      allFound = True
-    else:
-      try: 
-        docNodes = []
-        docNodes = xmldict['response']['result']['doc']
-        for docNode in docNodes:
-
-          docStringNodes = []
-          docStringNodes = docNode['str']
-          arrStringNodes = []
-          arrStringNodes = docNode['arr']
-          timestamp = docNode['date']['#text']
-          doi = ''
-          recId = ''
-          for docStringNode in docStringNodes:
-            name = docStringNode['@name']
-            if name == 'recID':
-              recId = docStringNode['#text']
-              recFound = True
-              count+=1
-            if name == 'doi' and recFound:
-              doi = docStringNode['#text']
-
-          recMetadataUri =  metadataUriBase.replace('_URI_', recId)
-          print recMetadataUri
-          resourceWritten = False
-
-          for arrStringNode in arrStringNodes:
-            name = arrStringNode['@name']
-            print name
-            if name == 'url':
-              linklStringNodes = []
-              linkStringNodes = arrStringNode['str']
-              linkText = linkStringNodes
-              print linkText
-              if '|' in linkText:
-                    linkTextParts = linkText.split('|')
-                    linkLabel = linkTextParts[0]
-                    linkVal = linkTextParts[1]
-                    print 'linkval = ' +linkVal
-                    try:
-                      thisResource = Resource(uri=linkVal, lastmod = timestamp)
-                      thisResource.link_set(rel="describedby", modified = timestamp, href = recMetadataUri)
-                      print ' got this far '
-                      thisResourceRecip = Resource(uri = recMetadataUri, lastmod = timestamp)
-                      thisResourceRecip.link_set(rel="describes", href=linkVal, modified=timestamp)
-                      thisResourceRecip.link_set(rel="profile", href="http://www.w3.org/2001/XMLSchema-instance")
-                      print ' got farther '
-                      rl.add([thisResource, thisResourceRecip])
-                      resourceWritten = True
-                      print 'resource added for ' + linkVal
-                    except Exception as e: print str(e)
-
-          if not resourceWritten: 
-                thisResource = Resource(uri=recMetadataUri, lastmod = timestamp, mime_type="application/xml", )
-                thisResource.link_set(rel="profile", href="http://www.w3.org/2001/XMLSchema-instance")
-                try:
-                  rl.add(thisResource)
-                except Exception as e: print str(e)
-
-        # if count>=15000:
-        #   allFound = True
-      except:
-        pass
-
-  response.writelines(rl.as_xml())
-  response.flush()
-  return HttpResponse(response, content_type="text/xml; charset=utf-8")
-
 def changelist(response):
   response = HttpResponse()
   response.writable()
@@ -259,14 +128,62 @@ def changelist(response):
        cl.add(thisResource)
        cl.add(thisResourceRecip)
 
-     except Exception as e: print str(e)
-
-     # except:
-     #    thisResource = Resource(uri=recMetadataUri, lastmod = solrResult['timestamp'], mime_type="application/xml", change='created', timestamp=solrResult['timestamp'])
-     #    thisResource.link_set(rel="profile", href="http://www.w3.org/2001/XMLSchema-instance")
-     #    cl.add(thisResource)
+     except:
+        thisResource = Resource(uri=recMetadataUri, lastmod = solrResult['timestamp'], mime_type="application/xml", change='created', timestamp=solrResult['timestamp'])
+        thisResource.link_set(rel="profile", href="http://www.w3.org/2001/XMLSchema-instance")
+        cl.add(thisResource)
 
   response.writelines(cl.as_xml())
+  response.flush()
+  return HttpResponse(response, content_type="text/xml; charset=utf-8")
+
+
+def resourcelist(response):
+  response = HttpResponse()
+  response.writable()
+
+  rl = ResourceList()
+
+  queryField = 'title'
+  queryString = settings.RESOURCESYNC_QUERY
+  # timestamp = settings.RESOURCESYNC_RESOURCELIST_TIMESTAMP
+  solr_timestamp = ''
+ 
+  rl.up = "capabilitylist.xml"
+
+  resourceList = dbLookup('resourcelist')
+  resourcelist_refresh = resourceList.interval
+  resourcelist_timestamp = resourceList.lower_bound
+  print 'resourcelist timestamp: ' + resourcelist_timestamp.strftime('%Y-%m-%dT%H:%M:%SZ')
+  solr_timestamp = resourcelist_timestamp.strftime('%Y-%m-%dT%H:%M:%SZ')
+
+  print 'solr timestamp: ' + solr_timestamp
+  rl.md_until = resourcelist_timestamp
+
+  solrResults = models.Results.results.get_queryset()
+
+  for solrResult in solrResults:
+     # a solrResult is a resultObj
+     # a resultObj has following fields: recID, timestamp, doi, contentUri
+     # if there is a contentUri, then describes, describedby
+     recMetadatari = ''
+     recMetadataUri =  metadataUriBase.replace('_URI_', solrResult['recID'])
+
+     try:
+       thisResource = Resource(uri=solrResult['contentUri'], lastmod = solrResult['timestamp'], change='created')
+       thisResource.link_set(rel="describedby", modified = solrResult['timestamp'], href = recMetadataUri)
+       thisResourceRecip = Resource(uri =recMetadataUri, lastmod=solrResult['timestamp'], change='created')
+       thisResourceRecip.link_set(rel="describes", href=solrResult['contentUri'], modified=solrResult['timestamp'])
+       thisResourceRecip.link_set(rel="profile", href="http://www.w3.org/2001/XMLSchema-instance")
+       rl.add(thisResource)
+       rl.add(thisResourceRecip)
+
+     except:
+        thisResource = Resource(uri=recMetadataUri, lastmod = solrResult['timestamp'], mime_type="application/xml", change='created', timestamp=solrResult['timestamp'])
+        thisResource.link_set(rel="profile", href="http://www.w3.org/2001/XMLSchema-instance")
+        rl.add(thisResource)
+
+  response.writelines(rl.as_xml())
   response.flush()
   return HttpResponse(response, content_type="text/xml; charset=utf-8")
 
