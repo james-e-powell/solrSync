@@ -124,13 +124,8 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 # ResourceSync Application settings
-# RESOURCESYNC_SOLR = 'http://hydraweb.lanl.gov:8080/solr/laro/select?q=_FIELD_%3A_QUERY_%20AND%20timestamp:[*%20TO%20_TIMESTAMP_]&wt=xml&indent=true&sort=recID+asc&cursorMark=_*_'
-# RESOURCESYNC_SOLR = 'http://hydraweb.lanl.gov:8080/solr/laro/select?q=collection_f:%22Hot%20Dry%20Rock%22%20AND%20timestamp:[*%20TO%20_TIMESTAMP_]&wt=xml&indent=true&sort=recID+asc&cursorMark=_*_'
-# RESOURCESYNC_SOLR = 'http://localhost:8983/solr/pubmed/select?q=_FIELD_%3A_QUERY_%20AND%20timestamp:[*%20TO%20_TIMESTAMP_]&wt=xml&indent=true&sort=id+asc&cursorMark=_*_'
-RESOURCESYNC_SOLR = 'http://hydraweb.lanl.gov:8080/solr/laro/select?q=title%3A*%20AND%20timestamp:[*%20TO%20_TIMESTAMP_]&wt=xml&indent=true&sort=recID+asc&cursorMark=_*_'
-# RESOURCESYNC_QUERY = 'chem*'
+RESOURCESYNC_SOLR = 'http://hydraweb.lanl.gov:8080/solr/laro/select?q=title%3A*%20AND%20timestamp:_TIMESTAMP_&wt=xml&indent=true&sort=recID+asc&cursorMark=_*_'
 RESOURCESYNC_QUERY = '*'
-# RESOURCESYNC_RESOURCELIST_TIMESTAMP='2016-01-08T17:22:27:00Z'
 RESOURCESYNC_RESOURCELIST_TIMESTAMP='2016-09-08T17:22:27:00Z'
 # %Y-%m-%dT%H:%M:%SZ
 RESOURCESYNC_CHANGELIST_TIMESTAMP='2016-05-26T16:33:33Z'

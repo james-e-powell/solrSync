@@ -51,7 +51,7 @@ class ResultsManager(models.Manager):
       return resp.text
 
     # def get_queryset(self, numResults):
-    def get_queryset(self):
+    def get_queryset(self, listTimestamp):
       # returns a list of resultObj
       # resultObj has following fields: recID, timestamp, doi, contentUri
       # resultObj is build from Solr results set doc entries
@@ -68,7 +68,8 @@ class ResultsManager(models.Manager):
       queryField = 'title'
       queryString = settings.RESOURCESYNC_QUERY
   
-      solr_timestamp = settings.RESOURCESYNC_RESOURCELIST_TIMESTAMP
+      # solr_timestamp = settings.RESOURCESYNC_RESOURCELIST_TIMESTAMP
+      solr_timestamp = listTimestamp
       print solr_timestamp
 
       count=0
@@ -91,6 +92,7 @@ class ResultsManager(models.Manager):
         except:
           pass
         searchUri = searchUri.replace('_TIMESTAMP_', solr_timestamp)
+        print searchUri
 
         if not (pagingCursor == ''):
           searchUri = searchUri.replace('_*_',pagingCursor)

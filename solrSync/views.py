@@ -108,9 +108,8 @@ def changelist(response):
   from_timestamp = resourcelist_timestamp.strftime('%Y-%m-%dT%H:%M:%SZ')
   until_timestamp = changelist_timestamp.strftime('%Y-%m-%dT%H:%M:%SZ')
   solr_timestamp = '{' + from_timestamp + ' to ' + until_timestamp + '}'
-  print 'changelist time query ' + solr_timestamp
 
-  solrResults = models.Results.results.get_queryset()
+  solrResults = models.Results.results.get_queryset(solr_timestamp)
  
   for solrResult in solrResults:
      # a solrResult is a resultObj
@@ -155,12 +154,11 @@ def resourcelist(response):
   resourcelist_refresh = resourceList.interval
   resourcelist_timestamp = resourceList.lower_bound
   print 'resourcelist timestamp: ' + resourcelist_timestamp.strftime('%Y-%m-%dT%H:%M:%SZ')
-  solr_timestamp = resourcelist_timestamp.strftime('%Y-%m-%dT%H:%M:%SZ')
+  solr_timestamp = resourcelist_timestamp.strftime('[* TO %Y-%m-%dT%H:%M:%SZ]')
 
-  print 'solr timestamp: ' + solr_timestamp
   rl.md_until = resourcelist_timestamp
 
-  solrResults = models.Results.results.get_queryset()
+  solrResults = models.Results.results.get_queryset(solr_timestamp)
 
   for solrResult in solrResults:
      # a solrResult is a resultObj
