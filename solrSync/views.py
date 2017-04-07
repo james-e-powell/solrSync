@@ -73,12 +73,18 @@ def resourceSync(response):
   
   return response
 
-def dbLookup(list_type):
+def dbLookup(list_type, timestamp=None):
   try:
     resourceSync = models.ResourceSync.objects.get(list_type=list_type)
   except:
-    thisMoment = timezone.now()
-    resourceSync = models.ResourceSync(lower_bound = thisMoment, list_type=list_type, interval=None)
+    timestamp_to_insert = timestamp
+    formatted_timestamp = ''
+    if timestamp_to_insert is None:
+      timestamp_to_insert = timezone.now()
+      formatted_timestamp = timestamp_to_insert.strftime('%Y-%m-%dT%H:%M:%SZ')
+    else:
+      formatted_timestamp = timestamp.strftime('%Y-%m-%dT%H:%M:%SZ')
+    resourceSync = models.ResourceSync(lower_bound = formatted_timestamp, list_type=list_type, interval=None)
     resourceSync.save()
   return resourceSync
 
@@ -111,6 +117,7 @@ def changelist(response):
   # until_timestamp = changelist_timestamp.strftime('%Y-%m-%dT%H:%M:%SZ')
   until_timestamp = thisMoment.strftime('%Y-%m-%dT%H:%M:%SZ')
   solr_timestamp = '{' + from_timestamp + ' to ' + until_timestamp + '}'
+  solr_timestamp = '{' + from_timestamp + ' to *}'
 
   solrResults = models.Results.results.get_queryset(solr_timestamp)
  
@@ -148,15 +155,18 @@ def resourcelist(response):
 
   queryField = 'title'
   queryString = settings.RESOURCESYNC_QUERY
-  # timestamp = settings.RESOURCESYNC_RESOURCELIST_TIMESTAMP
+  settings_timestamp = settings.RESOURCESYNC_RESOURCELIST_TIMESTAMP
+  print settings_timestamp
+  # 2016-09-08T17:22:27:00Z
+  bootstrap_timestamp = datetime.datetime.strptime(settings_timestamp, '%Y-%m-%dT%H:%M:%SZ')
   solr_timestamp = ''
  
   rl.up = "capabilitylist.xml"
 
-  resourceList = dbLookup('resourcelist')
+  resourceList = dbLookup('resourcelist', bootstrap_timestamp)
   resourcelist_refresh = resourceList.interval
   resourcelist_timestamp = resourceList.lower_bound
-  print 'resourcelist timestamp: ' + resourcelist_timestamp.strftime('%Y-%m-%dT%H:%M:%SZ')
+  # print 'resourcelist timestamp: ' + resourcelist_timestamp.strftime('%Y-%m-%dT%H:%M:%SZ')
   solr_timestamp = resourcelist_timestamp.strftime('[* TO %Y-%m-%dT%H:%M:%SZ]')
 
   rl.md_until = resourcelist_timestamp
