@@ -92,21 +92,24 @@ def changelist(response):
   queryField = 'title'
   queryString = settings.RESOURCESYNC_QUERY
 
+  thisMoment = timezone.now()
   solr_timestamp = ''
   resourcelist_timestamp = ''
-  changelist_timestamp = ''
+
+  changelist_timestamp = thisMoment
 
   resourceList = dbLookup('resourcelist')
   resourcelist_refresh = resourceList.interval
   resourcelist_timestamp = resourceList.lower_bound
   changeList = dbLookup('changelist')
-  changelist_timestamp = changeList.lower_bound
+  # changelist_timestamp = changeList.lower_bound
 
   cl.md_from = resourcelist_timestamp
-  cl.md_until = changelist_timestamp
+  # cl.md_until = changelist_timestamp
 
   from_timestamp = resourcelist_timestamp.strftime('%Y-%m-%dT%H:%M:%SZ')
-  until_timestamp = changelist_timestamp.strftime('%Y-%m-%dT%H:%M:%SZ')
+  # until_timestamp = changelist_timestamp.strftime('%Y-%m-%dT%H:%M:%SZ')
+  until_timestamp = thisMoment.strftime('%Y-%m-%dT%H:%M:%SZ')
   solr_timestamp = '{' + from_timestamp + ' to ' + until_timestamp + '}'
 
   solrResults = models.Results.results.get_queryset(solr_timestamp)
