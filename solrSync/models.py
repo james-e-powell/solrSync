@@ -70,7 +70,6 @@ class ResultsManager(models.Manager):
   
       # solr_timestamp = settings.RESOURCESYNC_RESOURCELIST_TIMESTAMP
       solr_timestamp = listTimestamp
-      print solr_timestamp
 
       count=0
       recFound = False
@@ -125,7 +124,6 @@ class ResultsManager(models.Manager):
               arrStringNodes = docNode['arr']
               timestamp = docNode['date']['#text']
               resultObj['timestamp'] = timestamp
-              print resultObj['timestamp']
               doi = ''
               recId = ''
               for docStringNode in docStringNodes:
@@ -140,22 +138,18 @@ class ResultsManager(models.Manager):
                   resultObj['doi'] = doi
 
               recMetadataUri =  metadataUriBase.replace('_URI_', recId)
-              print recMetadataUri
               print str(count)
 
               for arrStringNode in arrStringNodes:
                 name = arrStringNode['@name']
-                print name
                 if name == 'url':
                   linklStringNodes = []
                   linkStringNodes = arrStringNode['str']
                   linkText = linkStringNodes
-                  print linkText
                   if '|' in linkText:
                     linkTextParts = linkText.split('|')
                     linkLabel = linkTextParts[0]
                     linkVal = linkTextParts[1]
-                    print 'linkval = ' +linkVal
                     resultObj['contentUri']= linkVal
               try:
                 # test = resultObj['contentUri'] 

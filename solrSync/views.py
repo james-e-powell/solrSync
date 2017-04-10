@@ -35,18 +35,13 @@ def stream_response_generator():
 
 def headUri(resourceUri):
   resp = requests.head(resourceUri)
-  # print resp.status_code, resp.text, resp.headers
   metadata = {}
-  # print resp.headers['Content-Length']
   metadata['Content-Length'] = resp.headers['Content-Length']
-  # print resp.headers['Content-Type']
   metadata['Content-Type'] = resp.headers['Content-Type']
   return metadata
 
 def getUri(resourceUri):
   resp = requests.get(resourceUri)
-  # print resp.status_code, resp.text, resp.headers
-  # print resp.text
   return resp.text
 
 def resourceSync(response):
@@ -114,10 +109,10 @@ def changelist(response):
   # cl.md_until = changelist_timestamp
 
   from_timestamp = resourcelist_timestamp.strftime('%Y-%m-%dT%H:%M:%SZ')
-  # until_timestamp = changelist_timestamp.strftime('%Y-%m-%dT%H:%M:%SZ')
   until_timestamp = thisMoment.strftime('%Y-%m-%dT%H:%M:%SZ')
-  solr_timestamp = '{' + from_timestamp + ' to ' + until_timestamp + '}'
-  solr_timestamp = '{' + from_timestamp + ' to *}'
+  # solr_timestamp = '{' + from_timestamp + ' to *}'
+  solr_timestamp = '[' + from_timestamp + ' TO *]'
+  print 'changelist range ' + solr_timestamp
 
   solrResults = models.Results.results.get_queryset(solr_timestamp)
  
@@ -166,7 +161,6 @@ def resourcelist(response):
   resourceList = dbLookup('resourcelist', bootstrap_timestamp)
   resourcelist_refresh = resourceList.interval
   resourcelist_timestamp = resourceList.lower_bound
-  # print 'resourcelist timestamp: ' + resourcelist_timestamp.strftime('%Y-%m-%dT%H:%M:%SZ')
   solr_timestamp = resourcelist_timestamp.strftime('[* TO %Y-%m-%dT%H:%M:%SZ]')
 
   rl.md_until = resourcelist_timestamp
