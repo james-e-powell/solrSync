@@ -59,11 +59,6 @@ class ResultsManager(models.Manager):
       resultSet = []
       # Constants
       metadataUriBase = 'http://lastage.lanl.gov:8080/adore-disseminator/service?url_ver=Z39.88-2004&rft_id=_URI_&svc_id=info:lanl-repo/svc/xml.format.full'
-      doiResolver = 'https://dx.doi.org/'
-      permalinkReports = 'http://permalink.lanl.gov/object/tr?what=info:lanl-repo/lareport/'
-      solrUriBase = 'http://hydraweb.lanl.gov:8080/solr/laro/select?q=_FIELD_%3A_QUERY_&wt=xml&indent=true&sort=recID+asc&cursorMark=*'
-      solrCollUriBase = 'http://hydraweb.lanl.gov:8080/solr/laro/select?q=collection_f:%22_COLLECTION_%22&sort=timestamp+asc&wt=xml&indent=true&cursorMark=*'
-      docBaseUri = 'http://permalink.lanl.gov/object/tr?what=_ID_'
 
       queryField = 'title'
       queryString = settings.RESOURCESYNC_QUERY
