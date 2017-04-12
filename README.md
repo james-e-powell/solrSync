@@ -1,5 +1,15 @@
 # solrSync
-[ResourceSync](http://www.openarchives.org/rs/toc) is a Web content replication and synchronization standard. With ResourceSync, a source provides information about content that it makes available for replication, as well as information about subsequent changes to that content. A destination that wants to stay in sync with that source can retrieve this information in order to do so. The information exposed by the source is usually metadata and the objects described by that metadata. There are a variety of ways that a source can provide this information, including resourcelists, changelists, resource dumps, change dumps, change  notifications, etc. This prototype dynamically generates a resourcelist and an open changelist on behalf of a source. It is a DJango-based application that stands apart from the source. The resourcelist and changelist  are generated on the fly from a local or remote Solr index. There are three addressable URLs in urls.py: changelist.xml, resourcelist.xml, and an administrative view of solrSync Settings available at resourcesync. 
+[ResourceSync](http://www.openarchives.org/rs/toc) is a Web content replication and synchronization standard. With ResourceSync, a source provides information about content that it makes available for replication, as well as information about subsequent changes to that content. A destination that wants to stay in sync with that source can retrieve this information in order to do so. The information exposed by the source is usually metadata and the objects described by that metadata. There are a variety of ways that a source can provide this information, including resourcelists, changelists, resource dumps, change dumps, change  notifications, etc. 
+
+solrSync is a prototype application that supports a subset of ResourceSync functionality by dynamically generating a resourcelist and changelist from a Solr index. It is implemented asa DJango application and may be hosted on a server independent of the server hosting the Solr index. There are three addressable URLs in urls.py: changelist.xml, resourcelist.xml, and an administrative view of solrSync Settings available at resourcesync. 
+
+To get started, download the code and perform the following steps:
+
+ 1. execute 'python manage.py makemigrations' if needed
+ 2. execute 'python manage.py migrate'
+ 3. edit settings.py as needed (make sure it points at your Solr server)
+ 4. review models.py and edit as needed (the method get_queryset parses the Solr results so this is where you may need to make some changes - more about this below)
+ 5. then start Django and make an HTTP request for resourcelist.xml
 
 solrSync produces a resourcelist that includes content in the Solr index up to the date set in the settings file. This value is subsequently stored in a dbsql lite table so that subsequent requests for a esourcelist use the same timestamp. An open changelist also uses this date as a starting point. Thus the resourcelist.xml represents everything until the timestamp, and the changelist.xml contains everything from that timestamp value to the present.
 
