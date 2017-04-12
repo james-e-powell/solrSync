@@ -14,8 +14,8 @@ from django.views.decorators.http import condition
 from resync import Resource,ResourceList,ChangeList
 
 # Constants
-metadataUriBase = 'http://lastage.lanl.gov:8080/adore-disseminator/service?url_ver=Z39.88-2004&rft_id=_URI_&svc_id=info:lanl-repo/svc/xml.format.full'
-doiResolver = 'https://dx.doi.org/'
+metadataUriBase = settings.METADATAURIBASE
+doiResolver = settings.DOIRESOLVER
 
 @condition(etag_func=None)
 def stream_response(request):
@@ -86,9 +86,6 @@ def changelist(response):
   cl = ChangeList()
   # solrResults = models.Results.results.get_queryset()
 
-  queryField = 'title'
-  queryString = settings.RESOURCESYNC_QUERY
-
   thisMoment = timezone.now()
   solr_timestamp = ''
   resourcelist_timestamp = ''
@@ -144,8 +141,6 @@ def resourcelist(response):
 
   rl = ResourceList()
 
-  queryField = 'title'
-  queryString = settings.RESOURCESYNC_QUERY
   settings_timestamp = settings.RESOURCESYNC_RESOURCELIST_TIMESTAMP
   print settings_timestamp
   # 2016-09-08T17:22:27:00Z

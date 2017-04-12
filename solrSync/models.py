@@ -58,7 +58,7 @@ class ResultsManager(models.Manager):
 
       resultSet = []
       # Constants
-      metadataUriBase = 'http://lastage.lanl.gov:8080/adore-disseminator/service?url_ver=Z39.88-2004&rft_id=_URI_&svc_id=info:lanl-repo/svc/xml.format.full'
+      metadataUriBase = settings.METADATAURIBASE
 
       queryField = 'title'
       queryString = settings.RESOURCESYNC_QUERY

@@ -125,8 +125,11 @@ STATIC_URL = '/static/'
 
 # ResourceSync Application settings
 RESOURCESYNC_SOLR = 'http://hydraweb.lanl.gov:8080/solr/laro/select?q=title%3A*%20AND%20timestamp:_TIMESTAMP_&wt=xml&indent=true&sort=recID+asc&cursorMark=_*_'
-RESOURCESYNC_QUERY = '*'
 RESOURCESYNC_RESOURCELIST_TIMESTAMP='2016-03-08T17:22:27Z'
-# %Y-%m-%dT%H:%M:%SZ
+# The next two values are not currently used
 RESOURCESYNC_CHANGELIST_TIMESTAMP='2016-05-26T16:33:33Z'
 RESOURCESYNC_CHANGELIST_INTERVAL = '8 hours'
+
+# Other solrSync Application settings
+METADATAURIBASE = 'http://lastage.lanl.gov:8080/adore-disseminator/service?url_ver=Z39.88-2004&rft_id=_URI_&svc_id=info:lanl-repo/svc/xml.format.full'
+DOIRESOLVER = 'https://dx.doi.org/'
