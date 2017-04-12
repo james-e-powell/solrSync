@@ -60,8 +60,6 @@ class ResultsManager(models.Manager):
       # Constants
       metadataUriBase = settings.METADATAURIBASE
 
-      queryField = 'title'
-      queryString = settings.RESOURCESYNC_QUERY
   
       # solr_timestamp = settings.RESOURCESYNC_RESOURCELIST_TIMESTAMP
       solr_timestamp = listTimestamp
@@ -77,14 +75,6 @@ class ResultsManager(models.Manager):
         lastCursor = pagingCursor
 
         searchUri = settings.RESOURCESYNC_SOLR
-        try:
-          searchUri = searchUri.replace('_FIELD_', queryField)
-        except:
-          pass
-        try:
-          searchUri = searchUri.replace('_QUERY_', queryString)
-        except:
-          pass
         searchUri = searchUri.replace('_TIMESTAMP_', solr_timestamp)
         print searchUri
 
